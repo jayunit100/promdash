@@ -27,17 +27,20 @@
            tooltip-append-to-body="true" tooltip="Close"></i>
         </div>
         <div class="panel-body">
-          <expression
-            axes="graph.axes"
-            end-time="graph.endTime"
-            expr="graph.expression"
-            legend-format-strings="graph.legendFormatStrings"
-            range="graph.range"
-            servers="servers"
-            servers-by-id="serversById"
-            type="{{graph.type}}"
-            vars="vars"
-            index="$index"></expression>
+          <div ng-repeat="expr in graph.expressions">
+            <expression
+              axes="graph.axes"
+              end-time="graph.endTime"
+              expr="expr"
+              legend-format-strings="graph.legendFormatStrings"
+              range="graph.range"
+              servers="servers"
+              servers-by-id="serversById"
+              type="{{graph.type}}"
+              vars="vars"
+              index="$index"></expression>
+          </div>
+          <button class="btn btn-primary" ng-click="addExpression()">Add Expression</button>
         </div>
       </div>
 

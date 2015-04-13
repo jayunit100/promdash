@@ -18,7 +18,7 @@ angular.module("Prometheus.directives").directive('pieChart', ["$location", "Wid
         $el.css('height', graphHeight);
 
         if (pieGraph) {
-          $el.html('<div class="graph_chart"></div>');
+          $el.html('<div class="graph_chart pie_chart"></div>');
           pieGraph = null;
         }
 
@@ -27,19 +27,20 @@ angular.module("Prometheus.directives").directive('pieChart', ["$location", "Wid
         }
 
         pieData.forEach(function(e) {
-          e.value = parseFloat(e.Value || e.value);
+          var m = e.Metric || e.metric;
+          m.value = e.value = parseFloat(e.Value || e.value);
 
           if (scope.graphSettings.legendFormatString) {
-            e.ts = VariableInterpolator(scope.graphSettings.legendFormatString, e.Metric || e.metric);
+            e.ts = VariableInterpolator(scope.graphSettings.legendFormatString, m);
           } else {
-            var ts = joinProperties(e.Metric || e.metric, "=").map(function(t) {
+            var ts = joinProperties(m, "=").map(function(t) {
               return t.replace(/=(.+)/, function($1, $2) {
                 return "=\"" + $2 + "\"";
               });
             }).join(",");
-            e.ts = ((e.Metric || e.metric).__name__ || '') + "{" + ts + "}";
+            e.ts = (m.__name__ || '') + "{" + ts + "}";
           }
-          tooltip[e.ts] = e.Metric || e.metric;
+          tooltip[e.ts] = m;
         });
 
         var svg = dimple.newSvg($el.find(".graph_chart")[0], graphWidth, graphHeight);

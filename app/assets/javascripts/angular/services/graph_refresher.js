@@ -8,15 +8,10 @@ angular.module("Prometheus.services").factory('GraphRefresher',
                                                         VariableInterpolator,
                                                         URLGenerator) {
   return function($scope) {
-    function loadGraphData(idx, expression, server, expressionID, endTime, rangeSeconds, step) {
+    function loadGraphData(idx, server, path, expressionID, params) {
       var deferred = $q.defer();
-      $http.get(URLGenerator(server.url, '/api/query_range', $scope.vars), {
-        params: {
-          expr: expression,
-          range: rangeSeconds,
-          end: endTime,
-          step: step >= 5 ? step : 5
-        },
+      $http.get(URLGenerator(server.url, path, $scope.vars), {
+        params: params,
         cache: false
       }).then(function(payload, status) {
         data = payload.data;
@@ -31,6 +26,11 @@ angular.module("Prometheus.services").factory('GraphRefresher',
               'data': data
             });
             break;
+          case 'vector':
+            var d = data.value || data.Value;
+            d.forEach(function(s) { s.metric.serverName = server.name; });
+            deferred.resolve(d);
+            break;
           default:
             var errMsg = 'Expression ' + (idx + 1) + ': Result type "' + (data.Type || data.type) + '" cannot be graphed."';
             $scope.errorMessages.push(errMsg);
@@ -42,7 +42,7 @@ angular.module("Prometheus.services").factory('GraphRefresher',
       return deferred.promise;
     }
 
-    return function(endTime, rangeSeconds, step) {
+    return function(path, params) {
       var deferred = $q.defer();
       var promises = [];
       $scope.errorMessages = [];
@@ -52,9 +52,11 @@ angular.module("Prometheus.services").factory('GraphRefresher',
         if (server === undefined || !exp.expression) {
           continue;
         }
-        var expression = VariableInterpolator(exp.expression, $scope.vars);
+        params.expr = VariableInterpolator(exp.expression, $scope.vars);
         $scope.requestsInFlight = true;
-        promises[i] = loadGraphData(i, expression, server, exp.id, endTime, rangeSeconds, step);
+        // params is passed by reference, requiring us to make a copy.
+        // $.extend creates a shallow copy of the object.
+        promises[i] = loadGraphData(i, server, path, exp.id, $.extend({}, params));
       }
       $q.all(promises).then(function(data) {
         $scope.requestsInFlight = false;
