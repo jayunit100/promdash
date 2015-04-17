@@ -16,6 +16,10 @@ $light-secondary-background: #f0f0f0;
   margin-bottom: 8px;
 }
 
+.container-fluid, main {
+  margin: 0 15px;
+}
+
 .dashboard_settings {
   position: absolute;
   top: 33px;
