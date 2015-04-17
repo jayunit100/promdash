@@ -1,0 +1,27 @@
+<div class="global_grouping template_variables col-lg-12">
+  <table>
+    <tr>
+      <th colspan="4">
+        {{name}}
+      </th>
+    </tr>
+
+    <tr ng-repeat="p in profile">
+      <td>
+        <input type="text" class="form-control" placeholder="Variable name" ng-model="p.name" ng-disabled="name !== 'default'">
+      </td>
+      <td>=</td>
+      <td>
+        <input type="text" class="form-control" placeholder="Variable value" ng-model="p.value">
+      </td>
+      <td>
+        <button class="btn btn-default" type="button" ng-click="removeVariable($index)" ng-show="name === 'default'">
+          <i class="icon-cross"></i>
+        </button>
+      </td>
+    </tr>
+  </table>
+  <button class="btn btn-primary" type="button" ng-click="addVariable()" ng-show="name === 'default'">
+    <i class="icon-plus"></i>
+  </button>
+</div>

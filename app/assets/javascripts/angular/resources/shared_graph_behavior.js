@@ -5,7 +5,10 @@ angular.module("Prometheus.services").factory("SharedGraphBehavior", ["$http", "
       aspectRatio: 0.75,
       theme: "dark_theme",
       endTime: null,
-      vars: {}
+      vars: {},
+      profiles: {
+        default: [],
+      }
     };
 
     $scope.themeChange = function() {
@@ -37,6 +40,10 @@ angular.module("Prometheus.services").factory("SharedGraphBehavior", ["$http", "
 
       if (urlVars.fullscreen_title) {
         $scope.fullscreenTitle = true;
+      }
+
+      if (urlVars.profile && $scope.globalConfig.profiles[urlVars.profile]) {
+        $scope.activeProfile = urlVars.profile;
       }
 
       if (urlVars.range) {

@@ -10,6 +10,7 @@ angular.module("Prometheus.controllers")
             "InputHighlighter",
             "ModalService",
             "Palettes",
+            "DashboardVariables",
             function($scope,
                      $window,
                      $http,
@@ -20,7 +21,8 @@ angular.module("Prometheus.controllers")
                      SharedGraphBehavior,
                      InputHighlighter,
                      ModalService,
-                     Palettes) {
+                     Palettes,
+                     DashboardVariables) {
 
   $window.onresize = function() {
     $scope.$broadcast('redrawGraphs');
@@ -47,6 +49,7 @@ angular.module("Prometheus.controllers")
   $scope.showCloneControls = false;
   $scope.fullscreen = false;
   $scope.saving = false;
+  $scope.activeProfile = "default";
   $scope.aspectRatios = [
     {value: 0.75,    fraction: "4:3"},
     {value: 0.5625,  fraction: "16:9"},
@@ -73,6 +76,46 @@ angular.module("Prometheus.controllers")
       $scope.saving = false;
     });
   };
+
+  $scope.addProfile = function() {
+    var n = Object.keys($scope.globalConfig.profiles).length;
+    var p = "Profile" + n;
+    $scope.activeProfile = p;
+    $scope.globalConfig.profiles[p] = [];
+    // We have to copy each object in turn. Copying the default profile creates
+    // a new array, but the objects in that array are shared with the default
+    // profile.
+    $scope.globalConfig.profiles['default'].forEach(function(varObj) {
+      $scope.globalConfig.profiles[p].push(Object.create(varObj));
+    });
+  };
+
+  $scope.setActiveProfile = function(name) {
+    $scope.activeProfile = name;
+    $scope.mergedVars = DashboardVariables.mergeToObject($scope.vars, $scope.globalConfig.profiles[$scope.activeProfile]);
+  };
+
+  // Update mergedVars when a profile variable is changed
+  $scope.$watch(function() {
+    return $scope.globalConfig.profiles[$scope.activeProfile];
+  }, function() {
+    $scope.mergedVars = DashboardVariables.mergeToObject($scope.vars, $scope.globalConfig.profiles[$scope.activeProfile]);
+  }, true);
+
+  $scope.$watch('globalConfig.profiles.default.length', function(newDefault, oldDefault) {
+    var d = $scope.globalConfig.profiles.default;
+    for (var k in $scope.globalConfig.profiles) {
+      if (k === 'default') {
+        continue;
+      }
+      var p = $scope.globalConfig.profiles[k];
+      // Copy any extra/changed keys to profile[k].
+      var m = DashboardVariables.mergeToObjectArray(d, p);
+      // Remove any keys from profile[k] that aren't in profile.default.
+      // TODO: VERIFY THIS WORKS
+      $scope.globalConfig.profiles[k] = DashboardVariables.cleanObjectArray(m, d);
+    }
+  });
 
   $scope.enableFullscreen = function() {
     $scope.fullscreen = true;
@@ -173,6 +216,7 @@ angular.module("Prometheus.controllers")
       vars[name] = value;
     }
     $scope.globalConfig.vars = vars;
+    $scope.mergedVars = DashboardVariables.mergeToObject($scope.vars, $scope.globalConfig.profiles[$scope.activeProfile]);
   }, true);
 
   $scope.$watch('globalConfig.tags', function() {

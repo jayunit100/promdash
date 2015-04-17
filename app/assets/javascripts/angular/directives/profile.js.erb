@@ -1,0 +1,18 @@
+angular.module('Prometheus.directives').directive('profile', function() {
+  return {
+    scope: {
+      name: '=',
+      profile: '='
+    },
+    restrict: 'E',
+    templateUrl: "<%= asset_path('profile_template.html') %>",
+    link: function(scope, element, attrs) {
+      scope.addVariable = function(name, value) {
+        scope.profile.push({name: name, value: value});
+      };
+      scope.removeVariable = function(idx) {
+        scope.profile.splice(idx, 1);
+      };
+    }
+  };
+});
